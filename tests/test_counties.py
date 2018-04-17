@@ -21,7 +21,7 @@ class TestConstruction(unittest.TestCase):
 
     def test_parts(self):
         self.assertTrue(len(self.s.keys()) == 4)
-        self.assertFalse(len(self.s.keys() != 6))
+        self.assertFalse(len(self.s.keys()) == 6)
         self.assertTrue("GrantStreet" in self.s.keys())
         self.assertTrue("RealAuction" in self.s.keys())
         self.assertTrue("WFBS" in self.s.keys())
@@ -29,7 +29,7 @@ class TestConstruction(unittest.TestCase):
 
     def test_values(self):
         self.assertTrue(len(self.s['RealAuction']) == 17)
-        self.assertTrue(len(self.s['GrantStreet']) == 24)
+        self.assertTrue(len(self.s['GrantStreet']) == 23)
         self.assertTrue(len(self.s['DT']) == 11)
         self.assertTrue(len(self.s['WFBS']) == 4)
 
@@ -38,3 +38,7 @@ class TestConstruction(unittest.TestCase):
         self.assertTrue('Duval' in self.s['RealAuction'])
         self.assertTrue('Gulf' in self.s['DT'])
         self.assertTrue('Miami' in self.s['GrantStreet'])
+
+
+if __name__ == "__main__":
+    unittest.main()

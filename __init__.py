@@ -2,7 +2,7 @@ import pandas as pd
 import os
 from datetime import datetime
 
-from .counties.setup import countiesByPlatform
+from .counties.platform_gen import countiesByPlatform
 year = datetime.now().year
 
 countyownedlabels = [f"Cnty. Owned {x}" for x in range(year-7, year)]
