@@ -3,7 +3,7 @@ import os
 import pandas as pd
 
 
-from .setup import countiesByPlatform
+from Florida.counties.platform_gen import countiesByPlatform
 
 class TestConstruction(unittest.TestCase):
 
