@@ -1,12 +1,15 @@
 from datetime import datetime
 from .Errors import InputError
 import pandas as pd
+import math
 
 
-def homesteadmodifier(array):
+def homesteadmodifier(array, wfbs=False):
     '''
-    :param array: list
-    :return: list
+    purpose of this function is to manipulate the homestead array into a form the fl_model accepts
+    :param array: list from adv, tsr, or lum relating to homestead status of a lien
+    :wfbs boolean: determines if platform is wfbs. if so, will run the function differently
+    :return: updated list with the proper formatting we use in the model
     '''
     # Function to normalize homestead values from the adv_list
     # Will be used in the platform function Below
@@ -18,11 +21,27 @@ def homesteadmodifier(array):
         newarray = []
         for row in array:
             if row:
-                word = row.lower()
-                if word.startswith('y') or word.startswith('hx') or (word == True) or word.startswith("t"):
+                if row is True:
                     newarray.append('Yes')
-                else:
-                    newarray.append('No')
+                elif type(row) == str:
+                    word = row.lower()
+                    if word.startswith('y') or word.startswith('hx') or word.startswith("t"):
+                        newarray.append('Yes')
+                    else:
+                        newarray.append('No')
+                elif type(row) == int or type(row) == float:
+                    if row > 0:
+                        newarray.append('Yes')
+                    elif math.isnan(row):
+                        newarray.append('Yes')
+                    else:
+                        newarray.append('No')
+            elif row is False:
+                newarray.append('No')
+            elif row == 0:
+                newarray.append('No')
+            elif wfbs:
+                newarray.append('No')
             else:
                 newarray.append('Yes')
         return newarray
