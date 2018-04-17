@@ -3,9 +3,10 @@ import os
 import pandas as pd
 
 
-from setup import countiesByPlatform
+from .setup import countiesByPlatform
 
 class TestConstruction(unittest.TestCase):
+
     def setUp(self):
         self.s = countiesByPlatform
 
@@ -21,10 +22,10 @@ class TestConstruction(unittest.TestCase):
     def test_parts(self):
         self.assertTrue(len(self.s.keys()) == 4)
         self.assertFalse(len(self.s.keys() != 6))
-        self.assertTrue("GrantStreet" is in self.s.keys())
-        self.assertTrue("RealAuction" is in self.s.keys())
-        self.assertTrue("WFBS" is in self.s.keys())
-        self.assertTrue("DT" is in self.s.keys())
+        self.assertTrue("GrantStreet" in self.s.keys())
+        self.assertTrue("RealAuction" in self.s.keys())
+        self.assertTrue("WFBS" in self.s.keys())
+        self.assertTrue("DT" in self.s.keys())
 
     def test_values(self):
         self.assertTrue(len(self.s['RealAuction']) == 17)
