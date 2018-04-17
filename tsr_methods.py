@@ -1,18 +1,53 @@
 import pandas as pd
 from .adv_methods import homesteadmodifier
+from .Errors import InputError
 
 
-def tsr_generator(tsr_model, fl_model, tsr_cols, merge_on_left, merge_on_right, platform=""):
+def tsr_generator(tsr_model, fl_model, merge_on_left, merge_on_right, platform=""):
+    '''
 
+    :param tsr_model: pd.Dataframe that comes in from tsr
+    :param fl_model: pd.Dataframe -- used for the florida models
+    :param merge_on_left: string -- column to merge on
+    :param merge_on_right: string -- column to merge on
+    :param platform: a string that determines some extra functionality
+    :return fl_model: pd.Dataframe -- original with updates
+    '''
+
+    tsr_cols = ['List_Item_Ref', 'Amount', 'Location_House_Number', 'Location_City', 'Location_State', 'Location_Zip_4',
+                'Location_Full_Street_Address',
+                'Location_City_State_Zip', 'Longitude', 'Latitude', 'Current_Owner', 'Standardized_Land_Use',
+                'Standardized_Land_Use_Desc', 'Market_Value_Year',
+                'Total_Market_Value', 'Tax_Amount', 'CERT_HOLDER_TYPE1', 'CERT_HOLDER_TYPE2', 'CERT_HOLDER_TYPE3',
+                'CERT_HOLDER_TYPE4', 'CERT_HOLDER_TYPE5',
+                'CERT_HOLDER_TYPE6', 'CERT_HOLDER_TYPE7', 'Latest_Arms_Length_Sale_Date',
+                'Latest_Arms_Length_Sale_Price', 'Loan1_Amount', 'Loan1_Type',
+                'environmentalsubjectsitefoundcount', 'environmentalsitefoundcount', 'environmentalscore', 'FLD_CLASS',
+                'TaxDeedHistory', 'List_Note_2'
+                ]
+
+    # validating attribute types in the function
     if type(tsr_model) != pd.DataFrame:
         raise TypeError('tsr_model must be a pd.DataFrame')
     elif type(fl_model) != pd.DataFrame:
         raise TypeError('fl_model must be a pd.DataFrame')
-    elif type(tsr_cols) != list:
-        raise TypeError('columns must be a list')
+    # making sure the tsr_cols was not manipulated
+    elif type(tsr_cols) != list or len(tsr_cols) != 33:
+        raise TypeError('columns must be a list with a length of 33')
     elif type(merge_on_left) != str or type(merge_on_right) != str:
         raise TypeError('merging columns must be a string')
+    # making sure the merging will work correctly
+    elif merge_on_left not in fl_model.columns or merge_on_right not in tsr_cols:
+        raise ValueError('these are not columns in the models!')
+    elif type(platform) != str:
+        raise TypeError('platform must be a string')
     else:
+        # validating column names in the tsr_model
+        for column in tsr_cols:
+            if column not in tsr_model.columns:
+                raise InputError('tsr model missing a column', 'missing ' + column + ' in tsr_model')
+
+        # merging the dataframe
         tsr_sub = tsr_model.loc[:, tsr_cols]
         tsr_gen = fl_model[[merge_on_left]]
         proxy_model = tsr_gen.merge(tsr_sub, how="left", left_on=merge_on_left, right_on=merge_on_right)
