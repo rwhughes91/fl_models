@@ -11,7 +11,7 @@ test_array = ["YES", "NO", "yes", "no", "HX",
               ]
 
 
-class TestConstruction(unittest.TestCase):
+class TestConstruction_Homestead(unittest.TestCase):
 
     def setUp(self):
         self.array = test_array

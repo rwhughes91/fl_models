@@ -92,3 +92,5 @@ def lumentum_generator(lum_model, fl_model, merge_on_left, merge_on_right, platf
 
             fl_model['County_Land_Use'] = prox_model['ZoningUseCode']
             fl_model['County_Land_Use_Desc'] = prox_model['LandDescription']
+
+        return fl_model

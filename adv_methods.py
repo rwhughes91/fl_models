@@ -201,6 +201,8 @@ def dtadv(adv_list, fl_model):
 
     fl_model['HX'] = homesteadmodifier(adv_list['Homestead'])
 
+    return fl_model
+
 
 def wfbsadv(adv_list, fl_model):
 
@@ -216,3 +218,5 @@ def wfbsadv(adv_list, fl_model):
     fl_model['Assessment_Year'] = datetime.now().year - 1
     fl_model['Total_Assessed_Value'] = adv_list['Assessed Value']
     fl_model['Prior Liens Outstanding'] = adv_list['Unpaid Certificates']  # need to lookup still
+
+    return fl_model

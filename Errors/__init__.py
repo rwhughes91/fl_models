@@ -4,3 +4,8 @@ class InputError(Exception):
     def __init__(self, expression, message):
         self.expression = expression
         self.message = message
+
+
+class MergingError(Exception):
+    def __init__(self, message):
+        self.message = message
