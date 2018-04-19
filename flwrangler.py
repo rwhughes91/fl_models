@@ -24,7 +24,10 @@ class FloridaWrangler:
         '''
 
         # will tell you what county we are dealing with and how the model just be constructed from here
-        self._county = county
+        if type(county) != str:
+            raise InputError("county must be a string", "must be one of the 60 counties")
+        else:
+            self._county = county
         # will choose platform based on the county named you provide the instance
         self._platform = self.platformchooser(columns['countiesByPlatform'])
         self.adv_list = pd.read_excel(advfilelocation)
@@ -35,6 +38,7 @@ class FloridaWrangler:
 
         # this is the beginning construction of the model we will output
         self._fl_model = pd.DataFrame(columns=FloridaWrangler.columns.names)
+        self._merge = {}
 
     @property
     def county(self):
@@ -65,7 +69,6 @@ class FloridaWrangler:
     @property
     def fl_model(self):
         return self._fl_model
-
 
     def platformchooser(self, dict_like):
         '''
@@ -110,33 +113,84 @@ class FloridaWrangler:
         this function was made as a test to see what columns we should use between adv and tsr/lumentum for the merging
         :return: a dict specifying what columns we are safe to merge on
         '''
+        # reading in the frames
+        df = self._fl_model.loc[:, ['Account No.', 'Adv No.']].copy()
+        tsr = self.tsr.loc[:, ["Parcel_ID", "List_Item_Ref"]].copy()
 
-        df = self._fl_model.loc[:, ['Account No.', 'Adv No.', 'Amount']].copy()
-        tsr = self.tsr.loc[:, ["Parcel_ID", "List_Item_Ref", "Amount"]].copy()
-
-        df_parcel = df.merge(tsr, how="inner", left_on=["Account No.", "Adv No."],
-                             right_on=["Parcel ID", "List_Item_Ref"])
+        # fist merging calculation fl to tsr
         df_adv = df.merge(tsr, how="inner", left_on="Adv No.", right_on="List_Item_Ref")
-
-        df_parcel['adv compare'] = df_parcel['Adv No.'] == df_parcel['List_Item_Ref']
-        df_parcel['amount compare'] = df_parcel['Amount_x'] == df_parcel['Amount_y']
-
         df_adv['parcel compare'] = df_adv['Account No.'] == df_adv['Parcel_ID']
-        df_adv['amount compare'] = df_adv['Amount_x'] == df_adv['Amount_y']
 
+        # validating the merge
         if len(df_adv['parcel compare']) == df_adv['parcel compare'].sum():
-            result = {'left_on': "Adv No.",
-                      "right_on": "List_Item_Ref"
-                      }
-            return result
+            tsr_result = {
+                'left_on': "Adv No.",
+                "right_on": "List_Item_Ref"
+            }
 
-        elif len(df_parcel['Account No.']) == df_parcel['adv compare'].sum():
-            result = {"left_on": ["Account No.", "Adv No."],
-                      "right_on": ['Parcel_ID', 'List_Item_Ref']
-                      }
-            return result
+        # second merging for fl to tsr (only runs if first fails)
         else:
-            raise MergingError("Both parcel and adv dont seem to be merging correctly between tsr and the adv list")
+            df_parcel = df.merge(tsr, how="inner", left_on=["Account No.", "Adv No."],
+                                 right_on=["Parcel ID", "List_Item_Ref"])
+
+            df_parcel['adv compare'] = df_parcel['Adv No.'] == df_parcel['List_Item_Ref']
+
+            # validating the merge
+            if len(df_parcel['adv compare']) == df_parcel['adv compare'].sum():
+                tsr_result = {
+                    "left_on": ["Account No.", "Adv No."],
+                    "right_on": ['Parcel_ID', 'List_Item_Ref']
+                }
+
+            # if no merging calculation failed for tsr -- something wrong with tsr
+            else:
+                raise MergingError("Both parcel and adv dont seem to be merging correctly between tsr and the adv list")
+
+        # first merging calculation fl to lumentum
+        lum = self.lumentum[:, ["NALFormat", "TaxCollectorFormat", "AdvNumber"]].copy()
+
+        df_adv_lum = df.merge(lum, how="inner", left_on="Adv No.", right_on="AdvNumber")
+
+        df_adv_lum['parcel compare'] = df_adv_lum['Account No.'] == df_adv_lum['NALFormat']
+        df_adv_lum['parcel compare2'] = df_adv_lum['Account No.'] == df_adv_lum['TaxCollectorFormat']
+
+        # validating the merge
+        if len(df_adv_lum['parcel compare']) == df_adv_lum['parcel compare'].sum() or len(df_adv_lum['parcel compare2']) == df_adv_lum['parcel compare2'].sum():
+            lum_result = {
+                "left_on": "Adv No.",
+                "right_on": "AdvNumber"
+            }
+        # second merging calculation fl to lumentum
+        else:
+            df_parcel_lum = df.merge(lum, how="inner", left_on=["Account No.", "Adv No."],
+                                     right_on=["NALFormat", "AdvNumber"])
+            df_parcel_lum_alt = df.merge(lum, how="inner", left_on=["Account No.", "Adv No."],
+                                         right_on=["TaxCollectorFormat", "AdvNumber"])
+
+            df_parcel_lum['adv compare'] = df_parcel_lum['Adv No.'] == df_parcel_lum['AdvNumber']
+            df_parcel_lum_alt['adv compare'] = df_parcel_lum_alt['Adv No.'] == df_parcel_lum_alt['AdvNumber']
+
+            # validating the merge
+            if len(df_parcel_lum['adv compare']) == df_parcel_lum['adv compare'].sum():
+                lum_result = {
+                    "left_on": ["Account No.", "Adv No."],
+                    "right_on": ["NALFormat", "AdvNumber"]
+                }
+            # validating the merge
+            elif len(df_parcel_lum_alt['adv compare']) == df_parcel_lum_alt['adv compare'].sum():
+                lum_result = {
+                    "left_on": ["Account No.", "Adv No."],
+                    "right_on": ["TaxCollectorFormat", "AdvNumber"]
+                }
+            else:
+                raise MergingError("Both parcel and adv dont seem to be merging\
+                 correctly between lumentum and the adv list")
+        result = {
+            "tsr": tsr_result,
+            "lum": lum_result
+        }
+        self._merge = result
+        return result
 
     def tsr_gen(self):
         # do something
