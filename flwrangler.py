@@ -6,6 +6,8 @@ from Florida.adv_methods import homesteadmodifier, grantstreetadv, realauctionad
 from Florida.lumentum_methods import lumentum_generator
 from Florida.tsr_methods import tsr_generator
 from Florida.Errors import MergingError
+import sys
+from halo import Halo
 
 
 class FloridaWrangler:
@@ -30,14 +32,20 @@ class FloridaWrangler:
             self._county = county
         # will choose platform based on the county named you provide the instance
         self._platform = self.platformchooser(columns['countiesByPlatform'])
+
+        spinner = Halo(text="Reading in the files", spinner="dots")
+        spinner.start()
+
         self.adv_list = pd.read_excel(advfilelocation)
         # some data is only available in supplemental files, but not all of them
         self.supplemental = supplemental
         self.tsr = pd.read_excel(tsrfilelocation)
         self.lumentum = pd.read_excel(lumfilelocation)
 
+        spinner.succeed("Files were read in successfully")
+
         # this is the beginning construction of the model we will output
-        self._fl_model = pd.DataFrame(columns=FloridaWrangler.columns.names)
+        self._fl_model = pd.DataFrame(columns=FloridaWrangler.columns['names'])
         self._merge = {}
 
     @property
@@ -147,7 +155,7 @@ class FloridaWrangler:
                 raise MergingError("Both parcel and adv dont seem to be merging correctly between tsr and the adv list")
 
         # first merging calculation fl to lumentum
-        lum = self.lumentum[:, ["NALFormat", "TaxCollectorFormat", "AdvNumber"]].copy()
+        lum = self.lumentum.loc[:, ["NALFormat", "TaxCollectorFormat", "AdvNumber"]].copy()
 
         df_adv_lum = df.merge(lum, how="inner", left_on="Adv No.", right_on="AdvNumber")
 
@@ -200,6 +208,12 @@ class FloridaWrangler:
         # do something
         return
 
+if __name__ == "__main__":
+    advfilelocation = r"C:\Users\rhughes\Documents\Al test fl.xlsx"
+    tsrfilelocation = r"C:\Users\rhughes\Documents\al tsr.xlsx"
+    lumfilelocation = r"C:\Users\rhughes\Documents\Alachua Lumentum 2017.xlsx"
+
+    f = FloridaWrangler(sys.argv[1], advfilelocation, tsrfilelocation, lumfilelocation)
 
 
 
