@@ -15,7 +15,7 @@ def homesteadmodifier(array, wfbs=False):
     # Will be used in the platform function Below
 
     # self data type check
-    if type(array) != list:
+    if type(array) != pd.Series:
         raise TypeError('input to the function must be of type: list')
     else:
         newarray = []
@@ -65,7 +65,7 @@ def grantstreetadv(county, adv_list, fl_model):
         raise TypeError('fl_model must be a pandas dataframe')
 
     # dynamically get the current year we want to work with
-    year = datetime.now().year
+    year = datetime.now().year - 1
     # dynamically create columns that update by year for the adv_list
     # for fl_model
     cnty = [f"Cnty. Owned ({x})" for x in range(year - 7, year)]
@@ -75,7 +75,7 @@ def grantstreetadv(county, adv_list, fl_model):
     county_owned_columns.reverse()
 
     # certain counties pull differently
-    if county == "Charlotte" or "Indian River" or "Pinellas":
+    if county == "Charlotte" or county == "Indian River" or county == "Pinellas":
         # need to use Parcel No. instead of Account No.
         fl_model['Account No.'] = adv_list['Parcel No.']
     elif county == "Pasco":
@@ -153,7 +153,7 @@ def realauctionadv(adv_list, fl_model):
             ctypeBoolean = False
 
     if ctypeBoolean:
-        year = datetime.now().year
+        year = datetime.now().year - 1
         county_owned_columns = [f"Cnty. Owned {x}" for x in range(year - 6, year)]
         county_owned_columns.reverse()
 

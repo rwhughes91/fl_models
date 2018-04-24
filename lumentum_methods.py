@@ -25,7 +25,7 @@ def lumentum_generator(lum_model, fl_model, merge_on_left, merge_on_right, platf
                       'CertificateHolderType_6', 'CertificateHolderType_7'
                       ]
 
-    lum_cols = ['AdvNumber', 'FaceValue', 'Environmental', 'CDDName', 'BackTaxOpenCount',
+    lum_cols = ['AdvNumber', 'NALFormat', 'AuctionFormat', 'FaceValue', 'Environmental', 'CDDName', 'BackTaxOpenCount',
                 'GovtLien', 'LisPendens', certholdertype[0], certholdertype[1],
                 certholdertype[2], certholdertype[3], certholdertype[4],
                 certholdertype[5], certholdertype[6], 'ZoningUseCode', 'LandDescription'
@@ -39,18 +39,15 @@ def lumentum_generator(lum_model, fl_model, merge_on_left, merge_on_right, platf
         # validating arguments
         raise TypeError("fl_model must be a dataframe with 61 columns")
 
-    elif type(lum_cols) != list or len(lum_cols) != 16:
+    elif type(lum_cols) != list or len(lum_cols) != 18:
         # validating arguments
         raise TypeError("lum_cols must me a list to use for columns with a length of 16")
 
-    elif type(merge_on_left) != str or type(merge_on_right) != str:
+    elif (type(merge_on_left) != str and type(merge_on_right) != list)\
+            or (type(merge_on_right) != str and type(merge_on_right) != list):
         # validating arguments
         raise TypeError("your merging columns must be a string")
     # checking that merging names are in the columns
-    elif merge_on_left not in fl_model.columns or merge_on_right not in lum_cols:
-        # if not we raise a value error
-        raise ValueError("the merging you want to take place needs to be a column in the dataframe")
-
     elif type(platform) != str:
         # validating arguments
         raise TypeError("counties platform must be a string")
@@ -64,7 +61,10 @@ def lumentum_generator(lum_model, fl_model, merge_on_left, merge_on_right, platf
         # slice from the lum_cols from lum_model
         # merging the dataframe
         lum_sub = lum_model.loc[:, lum_cols]
-        lum_gen = fl_model[[merge_on_left]]
+        if type(merge_on_left) == list:
+            lum_gen = fl_model[merge_on_left]
+        elif type(merge_on_left) == str:
+            lum_gen = fl_model[[merge_on_left]]
         prox_model = lum_gen.merge(lum_sub, how="left", left_on=merge_on_left, right_on=merge_on_right)
 
         fl_model['Lumentum Check'] = prox_model['FaceValue']
@@ -74,7 +74,7 @@ def lumentum_generator(lum_model, fl_model, merge_on_left, merge_on_right, platf
         fl_model['LisPendens'] = prox_model['LisPendens']
 
         # to dynamically create columns for different platforms
-        year = datetime.now().year
+        year = datetime.now().year -1
         county_owned_columns = [f"Cnty. Owned {x}" for x in range(year - 7, year)]
         county_owned_columns.reverse()
 

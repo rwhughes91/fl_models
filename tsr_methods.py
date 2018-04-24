@@ -34,11 +34,10 @@ def tsr_generator(tsr_model, fl_model, merge_on_left, merge_on_right, platform="
     # making sure the tsr_cols was not manipulated
     elif type(tsr_cols) != list or len(tsr_cols) != 33:
         raise TypeError('columns must be a list with a length of 33')
-    elif type(merge_on_left) != str or type(merge_on_right) != str:
+    elif (type(merge_on_left) != str and type(merge_on_left) != list)\
+            or (type(merge_on_right) != str and type(merge_on_right) != list):
         raise TypeError('merging columns must be a string')
     # making sure the merging will work correctly
-    elif merge_on_left not in fl_model.columns or merge_on_right not in tsr_cols:
-        raise ValueError('these are not columns in the models!')
     elif type(platform) != str:
         raise TypeError('platform must be a string')
     else:
@@ -49,7 +48,10 @@ def tsr_generator(tsr_model, fl_model, merge_on_left, merge_on_right, platform="
 
         # merging the dataframe
         tsr_sub = tsr_model.loc[:, tsr_cols]
-        tsr_gen = fl_model[[merge_on_left]]
+        if type(merge_on_left) == str:
+            tsr_gen = fl_model[[merge_on_left]]
+        elif type(merge_on_left) == list:
+                tsr_gen = fl_model[merge_on_left]
         proxy_model = tsr_gen.merge(tsr_sub, how="left", left_on=merge_on_left, right_on=merge_on_right)
 
         fl_model['TSR_Check'] = proxy_model['Amount']

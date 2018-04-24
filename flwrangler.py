@@ -130,7 +130,7 @@ class FloridaWrangler:
         df_adv['parcel compare'] = df_adv['Account No.'] == df_adv['Parcel_ID']
 
         # validating the merge
-        if len(df_adv['parcel compare']) == df_adv['parcel compare'].sum():
+        if len(df_adv['parcel compare']) == df_adv['parcel compare'].sum() and df_adv['parcel compare'].sum() > 0:
             tsr_result = {
                 'left_on': "Adv No.",
                 "right_on": "List_Item_Ref"
@@ -144,7 +144,7 @@ class FloridaWrangler:
             df_parcel['adv compare'] = df_parcel['Adv No.'] == df_parcel['List_Item_Ref']
 
             # validating the merge
-            if len(df_parcel['adv compare']) == df_parcel['adv compare'].sum():
+            if len(df_parcel['adv compare']) == df_parcel['adv compare'].sum() and df_parcel['adv compare'].sum() > 0:
                 tsr_result = {
                     "left_on": ["Account No.", "Adv No."],
                     "right_on": ['Parcel_ID', 'List_Item_Ref']
@@ -155,15 +155,17 @@ class FloridaWrangler:
                 raise MergingError("Both parcel and adv dont seem to be merging correctly between tsr and the adv list")
 
         # first merging calculation fl to lumentum
-        lum = self.lumentum.loc[:, ["NALFormat", "TaxCollectorFormat", "AdvNumber"]].copy()
+        lum = self.lumentum.loc[:, ["NALFormat", "AuctionFormat", "AdvNumber"]].copy()
 
         df_adv_lum = df.merge(lum, how="inner", left_on="Adv No.", right_on="AdvNumber")
 
         df_adv_lum['parcel compare'] = df_adv_lum['Account No.'] == df_adv_lum['NALFormat']
-        df_adv_lum['parcel compare2'] = df_adv_lum['Account No.'] == df_adv_lum['TaxCollectorFormat']
+        df_adv_lum['parcel compare2'] = df_adv_lum['Account No.'] == df_adv_lum['AuctionFormat']
 
         # validating the merge
-        if len(df_adv_lum['parcel compare']) == df_adv_lum['parcel compare'].sum() or len(df_adv_lum['parcel compare2']) == df_adv_lum['parcel compare2'].sum():
+        if (len(df_adv_lum['parcel compare']) == df_adv_lum['parcel compare'].sum()\
+                or len(df_adv_lum['parcel compare2']) == df_adv_lum['parcel compare2'].sum())\
+                and (df_adv_lum['parcel compare'].sum() > 0 or df_adv_lum['parcel compare2'].sum() > 0):
             lum_result = {
                 "left_on": "Adv No.",
                 "right_on": "AdvNumber"
@@ -173,22 +175,24 @@ class FloridaWrangler:
             df_parcel_lum = df.merge(lum, how="inner", left_on=["Account No.", "Adv No."],
                                      right_on=["NALFormat", "AdvNumber"])
             df_parcel_lum_alt = df.merge(lum, how="inner", left_on=["Account No.", "Adv No."],
-                                         right_on=["TaxCollectorFormat", "AdvNumber"])
+                                         right_on=["AuctionFormat", "AdvNumber"])
 
             df_parcel_lum['adv compare'] = df_parcel_lum['Adv No.'] == df_parcel_lum['AdvNumber']
             df_parcel_lum_alt['adv compare'] = df_parcel_lum_alt['Adv No.'] == df_parcel_lum_alt['AdvNumber']
 
             # validating the merge
-            if len(df_parcel_lum['adv compare']) == df_parcel_lum['adv compare'].sum():
+            if len(df_parcel_lum['adv compare']) == df_parcel_lum['adv compare'].sum()\
+                    and df_parcel_lum['adv compare'].sum() > 0:
                 lum_result = {
                     "left_on": ["Account No.", "Adv No."],
                     "right_on": ["NALFormat", "AdvNumber"]
                 }
             # validating the merge
-            elif len(df_parcel_lum_alt['adv compare']) == df_parcel_lum_alt['adv compare'].sum():
+            elif len(df_parcel_lum_alt['adv compare']) == df_parcel_lum_alt['adv compare'].sum()\
+                    and df_parcel_lum_alt['adv compare'].sum() > 0:
                 lum_result = {
                     "left_on": ["Account No.", "Adv No."],
-                    "right_on": ["TaxCollectorFormat", "AdvNumber"]
+                    "right_on": ["AuctionFormat", "AdvNumber"]
                 }
             else:
                 raise MergingError("Both parcel and adv dont seem to be merging\
@@ -201,12 +205,22 @@ class FloridaWrangler:
         return result
 
     def tsr_gen(self):
-        # do something
-        return
+        # making sure the columns are available for merging
+        if "tsr" in self._merge.keys():
+            left_on = self._merge['tsr']["left_on"]
+            right_on = self._merge['tsr']["right_on"]
+            self._fl_model = tsr_generator(self.tsr, self._fl_model, left_on, right_on, self._platform.lower())
+        else:
+            raise InputError("you need to generate the merging columns before using", "")
 
     def lumentum_gen(self):
-        # do something
-        return
+        # making sure the columns are available for merging
+        if "lum" in self._merge.keys():
+            left_on = self._merge['lum']["left_on"]
+            right_on = self._merge['lum']["right_on"]
+            self._fl_model = lumentum_generator(self.lumentum, self._fl_model, left_on, right_on, self._platform.lower())
+        else:
+            raise InputError("you need to generate the merging columns before using", "")
 
 if __name__ == "__main__":
     advfilelocation = r"C:\Users\rhughes\Documents\Al test fl.xlsx"

@@ -3,7 +3,7 @@ import os
 from datetime import datetime
 
 from .counties.platform_gen import countiesByPlatform
-year = datetime.now().year
+year = datetime.now().year - 1
 
 countyownedlabels = [f"Cnty. Owned {x}" for x in range(year-7, year)]
 countyownedlabels.reverse()
