@@ -1,7 +1,7 @@
 import pandas as pd
 import os
 
-path = r"C:\Users\rhughes\Documents\Florida\Florida\counties"
+path = os.path.abspath(os.path.dirname(__file__))
 counties = pd.read_excel(path+"\CountyByPlatform.xlsx")
 
 

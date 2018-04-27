@@ -47,7 +47,7 @@ def homesteadmodifier(array, wfbs=False):
         return newarray
 
 
-def grantstreetadv(county, adv_list, fl_model):
+def grantstreetadv(county, adv_list, fl_model, yearsback=0):
     '''
     takes in county name, adv_list location, and fl_model
     will build out the fl_model with the assumtion of a grantstreet platform
@@ -65,7 +65,7 @@ def grantstreetadv(county, adv_list, fl_model):
         raise TypeError('fl_model must be a pandas dataframe')
 
     # dynamically get the current year we want to work with
-    year = datetime.now().year - 1
+    year = datetime.now().year - yearsback
     # dynamically create columns that update by year for the adv_list
     # for fl_model
     cnty = [f"Cnty. Owned ({x})" for x in range(year - 7, year)]
@@ -110,7 +110,7 @@ def grantstreetadv(county, adv_list, fl_model):
     return fl_model
 
 
-def realauctionadv(adv_list, fl_model):
+def realauctionadv(adv_list, fl_model, yearsback=0):
     '''
     takes in county name, adv_list location, and fl_model
     will build out the fl_model with the assumtion of a real_auction platform
@@ -153,7 +153,7 @@ def realauctionadv(adv_list, fl_model):
             ctypeBoolean = False
 
     if ctypeBoolean:
-        year = datetime.now().year - 1
+        year = datetime.now().year - yearsback
         county_owned_columns = [f"Cnty. Owned {x}" for x in range(year - 6, year)]
         county_owned_columns.reverse()
 
@@ -175,7 +175,7 @@ def realauctionadv(adv_list, fl_model):
     return fl_model
 
 
-def dtadv(adv_list, fl_model):
+def dtadv(adv_list, fl_model, yearsback=0):
 
     if type(adv_list) != pd.DataFrame:
         raise TypeError('adv_list must be a pandas dataframe')
@@ -185,7 +185,7 @@ def dtadv(adv_list, fl_model):
     fl_model['Account No.'] = adv_list['PropertyNo']
     fl_model['Adv No.'] = adv_list['SequenceID']
     fl_model['Amount'] = adv_list['UnPaidBalance']
-    fl_model['Tax_Year'] = datetime.now().year - 1
+    fl_model['Tax_Year'] = datetime.now().year - yearsback
 
     # if the use codes go higher than 100 they come in the 01000 format
     # dividing by 100 will fix this potential issue
@@ -195,7 +195,7 @@ def dtadv(adv_list, fl_model):
         fl_model['County_Land_Use'] = adv_list['UseCode']
 
     fl_model['County_Land_Use_Desc'] = adv_list['UseCodeDescription']
-    fl_model['Assessment_Year'] = datetime.now().year - 1
+    fl_model['Assessment_Year'] = datetime.now().year - yearsback
     fl_model['Total_Assessed_Value'] = adv_list['AssessedValue']
     fl_model['Prior Liens Outstanding'] = adv_list['PriorDelinqYrs']  # need to lookup still
 
@@ -204,7 +204,7 @@ def dtadv(adv_list, fl_model):
     return fl_model
 
 
-def wfbsadv(adv_list, fl_model):
+def wfbsadv(adv_list, fl_model, yearsback=0):
 
     if type(adv_list) != pd.DataFrame:
         raise TypeError('adv_list must be a pandas dataframe')
@@ -215,7 +215,7 @@ def wfbsadv(adv_list, fl_model):
     fl_model['Adv No.'] = adv_list['Advertising Seq No']
     fl_model['Amount'] = adv_list['Face Amount']
     fl_model['Tax_Year'] = adv_list['Tax Year']
-    fl_model['Assessment_Year'] = datetime.now().year - 1
+    fl_model['Assessment_Year'] = datetime.now().year - yearsback
     fl_model['Total_Assessed_Value'] = adv_list['Assessed Value']
     fl_model['Prior Liens Outstanding'] = adv_list['Unpaid Certificates']  # need to lookup still
 

@@ -2,7 +2,7 @@ import pandas as pd
 from datetime import datetime
 from .Errors import InputError
 
-def lumentum_generator(lum_model, fl_model, merge_on_left, merge_on_right, platform=""):
+def lumentum_generator(lum_model, fl_model, merge_on_left, merge_on_right, platform="", yearsback=0):
     '''
 
     This function is made to use as a static method for the fl_wrangler class
@@ -74,7 +74,7 @@ def lumentum_generator(lum_model, fl_model, merge_on_left, merge_on_right, platf
         fl_model['LisPendens'] = prox_model['LisPendens']
 
         # to dynamically create columns for different platforms
-        year = datetime.now().year -1
+        year = datetime.now().year - yearsback
         county_owned_columns = [f"Cnty. Owned {x}" for x in range(year - 7, year)]
         county_owned_columns.reverse()
 

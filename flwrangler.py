@@ -1,5 +1,5 @@
 import pandas as pd
-from Florida import columns
+from Florida import column_creator
 from datetime import datetime
 from Florida.Errors import InputError
 from Florida.adv_methods import homesteadmodifier, grantstreetadv, realauctionadv, dtadv, wfbsadv
@@ -7,12 +7,13 @@ from Florida.lumentum_methods import lumentum_generator
 from Florida.tsr_methods import tsr_generator
 from Florida.Errors import MergingError
 import sys
-from halo import Halo
+import os
 
 
 class FloridaWrangler:
     # class variable to define the columns of every model instance
-    columns = columns
+    yearsback = 1
+    columns = column_creator(yearsback=yearsback)
 
     # Set Up
     def __init__(self, county, advfilelocation, tsrfilelocation, lumfilelocation, supplemental=''):
@@ -31,18 +32,13 @@ class FloridaWrangler:
         else:
             self._county = county
         # will choose platform based on the county named you provide the instance
-        self._platform = self.platformchooser(columns['countiesByPlatform'])
-
-        spinner = Halo(text="Reading in the files", spinner="dots")
-        spinner.start()
+        self._platform = self.platformchooser(FloridaWrangler.columns['countiesByPlatform'])
 
         self.adv_list = pd.read_excel(advfilelocation)
         # some data is only available in supplemental files, but not all of them
         self.supplemental = supplemental
         self.tsr = pd.read_excel(tsrfilelocation)
         self.lumentum = pd.read_excel(lumfilelocation)
-
-        spinner.succeed("Files were read in successfully")
 
         # this is the beginning construction of the model we will output
         self._fl_model = pd.DataFrame(columns=FloridaWrangler.columns['names'])
@@ -56,7 +52,7 @@ class FloridaWrangler:
     def county(self, value):
         print("changing the county name. Please note this will change the entire object")
         self._county = value
-        self._platform = self.platformchooser(columns['countiesByPlatform'])
+        self._platform = self.platformchooser(FloridaWrangler.columns['countiesByPlatform'])
 
     @county.deleter
     def county(self):
@@ -95,23 +91,23 @@ class FloridaWrangler:
                 return platform
         raise ValueError('County does not seem to have a platform!')
 
-    def adv_gen(self):
+    def adv_gen(self, yearsback=0):
         platform = self._platform.lower()
 
         if platform == "grantstreet":
-            self._fl_model = grantstreetadv(self._county, self.adv_list, self._fl_model)
+            self._fl_model = grantstreetadv(self._county, self.adv_list, self._fl_model, yearsback)
 
         elif platform == "realauction":
             # do something
-            self._fl_model = realauctionadv(self.adv_list, self._fl_model)
+            self._fl_model = realauctionadv(self.adv_list, self._fl_model, yearsback)
 
         elif platform == "dt":
             # do something
-            self._fl_model = dtadv(self.adv_list, self._fl_model)
+            self._fl_model = dtadv(self.adv_list, self._fl_model, yearsback)
 
         elif platform == "wfbs":
             # do something
-            self._fl_model = wfbsadv(self.adv_list, self._fl_model)
+            self._fl_model = wfbsadv(self.adv_list, self._fl_model, yearsback)
 
         else:
             raise InputError("something seems to be wrong with the platform", "it needs to be one the big 4")
@@ -213,19 +209,35 @@ class FloridaWrangler:
         else:
             raise InputError("you need to generate the merging columns before using", "")
 
-    def lumentum_gen(self):
+    def lumentum_gen(self, yearsback=0):
         # making sure the columns are available for merging
         if "lum" in self._merge.keys():
             left_on = self._merge['lum']["left_on"]
             right_on = self._merge['lum']["right_on"]
-            self._fl_model = lumentum_generator(self.lumentum, self._fl_model, left_on, right_on, self._platform.lower())
+            self._fl_model = lumentum_generator(self.lumentum, self._fl_model, left_on, right_on, self._platform.lower(), yearsback)
         else:
             raise InputError("you need to generate the merging columns before using", "")
 
+    def wrangle(self):
+        self.adv_gen(FloridaWrangler.yearsback)
+        self.merging_calc()
+        self.tsr_gen()
+        self.lumentum_gen(FloridaWrangler.yearsback)
+
+        self._fl_model['County'] = self.county
+        cals = ['Location_City', 'Location_State', 'Location_Zip_4']
+        temp_df = self._fl_model.loc[:, cals].copy()
+        temp_df = temp_df.fillna(0)
+
+        for i in cals:
+            self._fl_model[i] = temp_df[i]
+
+
 if __name__ == "__main__":
-    advfilelocation = r"C:\Users\rhughes\Documents\Al test fl.xlsx"
-    tsrfilelocation = r"C:\Users\rhughes\Documents\al tsr.xlsx"
-    lumfilelocation = r"C:\Users\rhughes\Documents\Alachua Lumentum 2017.xlsx"
+    path = os.path.abspath(os.path.dirname(__file__))
+    advfilelocation = path + r"\Examples\Alachua\Al test fl.xlsx"
+    tsrfilelocation = path + r"\Examples\Alachua\al tsr.xlsx"
+    lumfilelocation = path + r"\Examples\Alachua\Alachua Lumentum 2017.xlsx"
 
     f = FloridaWrangler(sys.argv[1], advfilelocation, tsrfilelocation, lumfilelocation)
 
