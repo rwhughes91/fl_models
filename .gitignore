@@ -1,1 +1,4 @@
 Examples/*
+.cache/*
+.idea/*
+__pycache__/*
