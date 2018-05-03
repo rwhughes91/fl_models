@@ -225,6 +225,8 @@ class FloridaWrangler:
         self.lumentum_gen(FloridaWrangler.yearsback)
 
         self._fl_model['County'] = self.county
+
+
         cals = ['Location_City', 'Location_State', 'Location_Zip_4']
         temp_df = self._fl_model.loc[:, cals].copy()
         temp_df = temp_df.fillna(0)

@@ -1,6 +1,8 @@
 import pandas as pd
 from .adv_methods import homesteadmodifier
 from .Errors import InputError
+import pdb
+import numpy as np
 
 
 def tsr_generator(tsr_model, fl_model, merge_on_left, merge_on_right, platform=""):
@@ -53,6 +55,11 @@ def tsr_generator(tsr_model, fl_model, merge_on_left, merge_on_right, platform="
         elif type(merge_on_left) == list:
                 tsr_gen = fl_model[merge_on_left]
         proxy_model = tsr_gen.merge(tsr_sub, how="left", left_on=merge_on_left, right_on=merge_on_right)
+        slice = pd.isnull(proxy_model['List_Item_Ref'])
+        proxy_model.loc[slice, :] = proxy_model.loc[slice, :].fillna('#N/A')
+        proxy_model = proxy_model.fillna(0)
+
+        pdb.set_trace()
 
         fl_model['TSR_Check'] = proxy_model['Amount']
         fl_model['Location_House_Number'] = proxy_model['Location_House_Number']
