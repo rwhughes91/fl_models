@@ -1,7 +1,6 @@
 import pandas as pd
 from .adv_methods import homesteadmodifier
 from .Errors import InputError
-import pdb
 import numpy as np
 
 
@@ -53,13 +52,17 @@ def tsr_generator(tsr_model, fl_model, merge_on_left, merge_on_right, platform="
         if type(merge_on_left) == str:
             tsr_gen = fl_model[[merge_on_left]]
         elif type(merge_on_left) == list:
-                tsr_gen = fl_model[merge_on_left]
+            tsr_sub['Parcel_ID'] = tsr_model['Parcel_ID']
+            tsr_gen = fl_model[merge_on_left]
+        else:
+            raise TypeError('Merging Columns must be a list of strings or a string - tsr')
         proxy_model = tsr_gen.merge(tsr_sub, how="left", left_on=merge_on_left, right_on=merge_on_right)
-        slice = pd.isnull(proxy_model['List_Item_Ref'])
-        proxy_model.loc[slice, :] = proxy_model.loc[slice, :].fillna('#N/A')
-        proxy_model = proxy_model.fillna(0)
 
-        pdb.set_trace()
+        # conditionally changing null values in the data frame to simulate an excel vlookup
+        slice = pd.isnull(proxy_model['List_Item_Ref'])
+        if slice.sum() > 0:
+            proxy_model.loc[slice, :] = proxy_model.loc[slice, :].fillna('#N/A')
+        proxy_model = proxy_model.fillna(0)
 
         fl_model['TSR_Check'] = proxy_model['Amount']
         fl_model['Location_House_Number'] = proxy_model['Location_House_Number']

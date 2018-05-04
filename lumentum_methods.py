@@ -65,7 +65,16 @@ def lumentum_generator(lum_model, fl_model, merge_on_left, merge_on_right, platf
             lum_gen = fl_model[merge_on_left]
         elif type(merge_on_left) == str:
             lum_gen = fl_model[[merge_on_left]]
+        else:
+            raise TypeError('Merging columns must be a list of strings of a string - Lumentum')
         prox_model = lum_gen.merge(lum_sub, how="left", left_on=merge_on_left, right_on=merge_on_right)
+
+        # conditionally changing null values in the data frame to simulate an excel vlookup
+        slice = pd.isnull(prox_model['AdvNumber'])
+        if slice.sum() > 0:
+            prox_model.loc[slice, :] = prox_model.loc[slice, :].fillna('#N/A')
+        prox_model = prox_model.fillna(0)
+
 
         fl_model['Lumentum Check'] = prox_model['FaceValue']
         fl_model['Environment File Lumentum'] = prox_model['Environmental']
