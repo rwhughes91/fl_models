@@ -221,6 +221,9 @@ class FloridaWrangler:
 
     def cleanup(self):
         self._fl_model['County'] = self.county
+        self._fl_model['Zillow Test'] = 'N/A'
+        self._fl_model['Flood'] = 'N/A'
+        self._fl_model['Equalization Ratio'] = 1
 
         # get rid of all zeros in 2 different columns: Location_House_Number and CDD Bond
         zero_values_address = f.fl_model['Location_House_Number'] == 0
@@ -297,6 +300,69 @@ class FloridaWrangler:
         # environmental file for lumentum
         formula_column_generator('BF', '=IFERROR(IF(BE{0}="Without Environmental Issues","No","Yes"),"No")',
                                  color="#d9d9d9")
+        # address formulas
+        formula_column_generator('BH', '=M{0}', color="#d9d9d9")
+        formula_column_generator('BI', '=Proper(J{0})', color='#d9d9d9')
+        formula_column_generator('BJ', '=PROPER(K{0})', color="#d9d9d9")
+        formula_column_generator('BK', '=L{0}', color="#d9d9d9")
+        formula_column_generator('BL', '=CONCATENATE(M{0}," ",N{0})', color="#d9d9d9")
+        formula_column_generator('BP', '=IF(D{0}>10000,IF(OR(I{0}="",I{0}=0,BI{0}="",BI{0}=0,BK{0}=0),"Bad Address","Pass"),"FV<$10K")', color="#d9d9d9")
+
+        # loan information
+        formula_column_generator('BM', '=IF(AU{0}>0,"L","")', color="#d9d9d9")
+
+        # lien information
+        formula_column_generator('BN', '=IF(D{0}<150,"Lien<$150","Pass")', color="#d9d9d9")
+        formula_column_generator('BO', '=IF(BC{0}="Yes","Yes","No")', color='#d9d9d9')
+
+        # zillow tests and pulls
+
+        # EPA, CDD, Flood
+        formula_column_generator('BR', '=IF(D{0}>20000,IF(OR(BD{0}="Yes",BF{0}="Yes"),"Yes","No"),"No, < $20K Lien")', color="#d9d9d9")
+        formula_column_generator('BS', '=IF(D{0}>20000,IF(IFERROR(IF(BG{0}="None","No","Yes"),"No")="Yes","Yes","No"),"No, Lien < $20K")', color="#d9d9d9")
+
+        # priors and county tests
+        formula_column_generator('BU', '=IF(E{0}="","N/A",IF(OR(E{0}<2014,AR{0}="Yes"),"Yes","No"))', color="#d9d9d9")
+        formula_column_generator('BV', '=IFERROR(IF(COUNTIF(C:C,C{0})>1,"Yes","No"),"No")', color="#d9d9d9")
+        formula_column_generator('BW', '=BA{0}', color="#d9d9d9")
+        formula_column_generator('BX', '=IF(AND(OR(CI{0}="S",CI{0}="R",CI{0}="C"),CH{0}="Yes",BW{0}>2),"Yes",IF(AND(OR(CI{0}="S",CI{0}="R",CI{0}="C"),CH{0}="No",BW{0}>1),"Yes",IF(AND(CI{0}="V",CH{0}="Yes",BW{0}>0),"Yes","No")))', color="#d9d9d9")
+        formula_column_generator('BY', '=VALUE(W{0})', color="#d9d9d9")
+
+        # equilization tests
+        formula_column_generator('CA', '=BY{0}/BZ{0}', color="#d9d9d9")
+
+        # ALS columns
+        formula_column_generator('CC', '=AS{0}', color="#d9d9d9")
+        formula_column_generator('CD', '=VALUE(AT{0})', color="#d9d9d9")
+        formula_column_generator('CE', '=IFERROR(IF(CD{0}>1000,YEAR(CC{0}),""),"")', color="#d9d9d9")
+
+        # valuation data
+        formula_column_generator('CF', "=HLOOKUP(CE{0},'Valuation Data'!$D$2:$K$5,4,FALSE)", color="#d9d9d9")
+        formula_column_generator('CG', "=IF(CB{0}>0,MIN(IFERROR(MIN(CD{0}*CF{0},CA{0}),CA{0}),CB{0}),IFERROR(MIN(CD{0}*CF{0},CA{0}),CA{0}))", color="#d9d9d9")
+
+        # use code tests
+        formula_column_generator('CI', "=VLOOKUP(R{0},'Use Codes & County Type'!B:E,4,FALSE)", color="#d9d9d9")
+        formula_column_generator('CH', '=IFERROR(IF(AND(OR(CI{0}="S",CI{0}="R",CI{0}="C",CI{0}="V"),CF{0}>0),"Yes","No"),"No")', color="#d9d9d9")
+        formula_column_generator('CJ', '=IF(AND(CH{0}="No",CI{0}="V"),"Yes","No")', color="#d9d9d9")
+
+        # homestead
+        formula_column_generator('CK', '=IF(OR(BB{0}="Yes",BB{0}=""),"Yes","No")', color="#d9d9d9")
+
+        # more valuation and cash flow tests
+        formula_column_generator('CL', '=IF(AND(OR(CI{0}="S",CI{0}="R",CI{0}="C"),CH{0}="Yes",CK{0}="Yes"),75%,IF(AND(OR(CI{0}="S",CI{0}="R"),CH{0}="Yes",CK{0}="No"),40%,IF(AND(OR(CI{0}="S",CI{0}="R",CI{0}="C"),CH{0}="No",CK{0}="Yes"),67%,IF(AND(OR(CI{0}="S",CI{0}="R"),CH{0}="No",CK{0}="No"),35%,IF(AND(CI{0}="C",CH{0}="Yes"),35%,IF(AND(CI{0}="C",CH{0}="No"),30%,IF(AND(CH{0}="Yes",CI{0}="V"),10%,0%)))))))', color="#d9d9d9")
+        formula_column_generator('CM', '=CG{0}*CL{0}', color="#d9d9d9")
+        formula_column_generator('CN', '=D{0}+(BA{0}+3)*MAX(D{0},Z{0})', color="#d9d9d9")
+        formula_column_generator('CO', '=CM{0}-CN{0}', color="#d9d9d9")
+        formula_column_generator('CP', '=+CN{0}/CG{0}', color="#d9d9d9")
+
+        # google testing
+        formula_column_generator('CR', '=IF(AND(CV{0}="*Bid",D{0}>49999),"Google","No")', color="#d9d9d9")
+
+        # bid results test
+        formula_column_generator('CV', '=IF(BN{0}="Lien<$150","Lien<$150",IF(OR(BU{0}="Yes",BV{0}="Yes"),"County Held Lien",IF(CG{0}<30000,"FMV<$30K",IF(BR{0}="Yes","EPA",IF(BS{0}="Yes","CDD",IF(BT{0}="High","Flood",IF(BX{0}="Yes","Too Many Priors",IF(CJ{0}="Yes","Vacant, No Sales Data",IF(CO{0}<0,"Neg Solv Premium",IF(BP{0}="Bad Address","Bad Address",IF(CQ{0}="Bad","Bad Data",IF(CS{0}="Bad","Bad Google",IF(CT{0}="Redeemed","Redeemed",IF(CU{0}="Data Change","Data Change","*Bid"))))))))))))))', color="#d9d9d9")
+        formula_column_generator('CW', '=VALUE(A{0})', color="#d9d9d9")
+        formula_column_generator('CX', '=VALUE(D{0})', color="#d9d9d9")
+        formula_column_generator('CY', '=IF(AND(CV{0}="*Bid",CX{0}>75000),"Check","Ok")', color="#d9d9d9")
 
         # output the excel to the current directory
         # pdb.set_trace()

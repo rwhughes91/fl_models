@@ -35,7 +35,7 @@ def lumentum_generator(lum_model, fl_model, merge_on_left, merge_on_right, platf
         # validating arguments
         raise TypeError("lumentum model must be a dataframe")
 
-    elif type(fl_model) != pd.DataFrame or len(fl_model.columns) != 61:
+    elif type(fl_model) != pd.DataFrame or len(fl_model.columns) != 105:
         # validating arguments
         raise TypeError("fl_model must be a dataframe with 61 columns")
 

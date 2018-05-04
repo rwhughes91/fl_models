@@ -20,7 +20,11 @@ def column_creator(yearsback=0):
                 'Adv County Cert','TSR County Cert','Prior Cnty-Owned (past 7 years)','Latest_Arms_Length_Sale_Date',
                 'Latest_Arms_Length_Sale_Price','Loan1_Amount','Loan1_Type','environmentalsubjectsitefoundcount','environmentalsitefoundcount',
                 'environmentalscore','FLD_CLASS','Prior Liens Outstanding','HX','Tax Deed History','Environment File TSR For Test','Environment File Lumentum',
-                'Environment File Lumentum For Test','CDD Bond','GovernmentLien','LisPendens'],
+                'Environment File Lumentum For Test','CDD Bond', 'Address', 'City', 'State', 'Zip', 'Full Address', 'Loan?', 'Lien < $150', 'Tax Deed History_2',
+                'Bad Address',"Zillow Test", 'EPA', "CDD", 'Flood', 'Prior Cnty-Owned (past 7 years)', 'Multiple Liens for Sale', "Priors", "Prior Screen",
+                "AV", "Equalization Ratio", "Equalized AV", "Zestimate", "Latest ALS Date", "Latest ALS Price", "Sale Year (if > $1k)", "Market Index", "Value to use",
+                "Sales Data within 7 years", "Use Code", "Vacant, No Sales Data", "Hx", "Haircut", "Adj Value for Calc", "Foreclosure (All-in $)", "Solv Prem",
+                "LTV", "Bad Data/Other", "Google Test", "Google Assessment", "Available", "Data Change", "Bid?", "Lien Ref", "Face", "Large Liens?", 'GovernmentLien','LisPendens'],
 
         'countiesByPlatform': countiesByPlatform,
 
