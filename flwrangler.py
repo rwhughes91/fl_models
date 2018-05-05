@@ -17,7 +17,7 @@ class FloridaWrangler:
     columns = column_creator(yearsback=yearsback)
 
     # Set Up
-    def __init__(self, county, advfilelocation, tsrfilelocation, lumfilelocation, supplemental=''):
+    def __init__(self, county, advfilelocation, tsrfilelocation, lumfilelocation, market_values_location, supplemental=''):
 
         '''
             DOCSTRING
@@ -40,6 +40,7 @@ class FloridaWrangler:
         self.supplemental = supplemental
         self.tsr = pd.read_excel(tsrfilelocation)
         self.lumentum = pd.read_excel(lumfilelocation)
+        self.zillow_values = pd.read_excel(market_values_location, sheetname='All Homes', skiprows=[0])
 
         # this is the beginning construction of the model we will output
         self._fl_model = pd.DataFrame(columns=FloridaWrangler.columns['names'])
@@ -378,8 +379,9 @@ if __name__ == "__main__":
     advfilelocation = path + r"\Examples\Alachua\Al test fl.xlsx"
     tsrfilelocation = path + r"\Examples\Alachua\al tsr.xlsx"
     lumfilelocation = path + r"\Examples\Alachua\Alachua Lumentum 2017.xlsx"
+    zillow_location = path + r"\Examples\Alachua\Alachua Zillow.xlsx"
 
-    f = FloridaWrangler(sys.argv[1], advfilelocation, tsrfilelocation, lumfilelocation)
+    f = FloridaWrangler(sys.argv[1], advfilelocation, tsrfilelocation, lumfilelocation, zillow_location)
 
 
 
