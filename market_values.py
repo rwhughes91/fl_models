@@ -3,6 +3,7 @@ from datetime import datetime
 
 
 def market_values_gen(fl_model, yearsback=0):
+    columns = ['Region Name', 'Region Type', 'Data Type']
     mapper = []
     year = datetime.now().year - yearsback
     county_data_row = fl_model.zillow_values[(fl_model.zillow_values['Region Name'] == fl_model.county) & (fl_model.zillow_values['Region Type'] == 'county')]
@@ -13,4 +14,6 @@ def market_values_gen(fl_model, yearsback=0):
             if yearsback >= 0:
                 if name.month == 3 and name.year == year:
                     mapper.append(name)
-    return mapper
+    columns = columns + mapper
+    df = county_data_row.loc[:, columns].copy()
+    return df

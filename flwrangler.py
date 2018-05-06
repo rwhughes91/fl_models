@@ -13,11 +13,11 @@ import pdb
 
 class FloridaWrangler:
     # class variable to define the columns of every model instance
-    yearsback = 1
+    yearsback = 0
     columns = column_creator(yearsback=yearsback)
 
     # Set Up
-    def __init__(self, county, advfilelocation, tsrfilelocation, lumfilelocation, market_values_location, supplemental=''):
+    def __init__(self, county, advfilelocation, tsrfilelocation, lumfilelocation, market_values_location, use_codes_location, supplemental=''):
 
         '''
             DOCSTRING
@@ -40,7 +40,8 @@ class FloridaWrangler:
         self.supplemental = supplemental
         self.tsr = pd.read_excel(tsrfilelocation)
         self.lumentum = pd.read_excel(lumfilelocation)
-        self.zillow_values = pd.read_excel(market_values_location, sheetname='All Homes', skiprows=[0])
+        self.zillow_values = pd.read_excel(market_values_location, sheet_name='All Homes', skiprows=[0])
+        self.use_codes = pd.read_excel(use_codes_location)
 
         # this is the beginning construction of the model we will output
         self._fl_model = pd.DataFrame(columns=FloridaWrangler.columns['names'])
@@ -240,9 +241,26 @@ class FloridaWrangler:
         self.lumentum_gen(FloridaWrangler.yearsback)
         self.cleanup()
 
-    def write(self):
+    def write(self, yearsback=0):
         name = "{} Florida Model.xlsx".format(self.county)
         writer = pd.ExcelWriter(name, engine='xlsxwriter')
+
+        def market_values_gen(fl_model, yearsback=0):
+            columns = ['Region Name', 'Region Type', 'Data Type']
+            mapper = []
+            year = datetime.now().year - yearsback
+            county_data_row = fl_model.zillow_values[(fl_model.zillow_values['Region Name'] == fl_model.county) & (
+                fl_model.zillow_values['Region Type'] == 'county')]
+            for namee in county_data_row.columns:
+                if type(namee) == datetime:
+                    if namee.month == 6 and ((year - namee.year <= 7) and (year - namee.year > 0)):
+                        mapper.append(namee)
+                    if yearsback >= 0:
+                        if namee.month == 3 and namee.year == year:
+                            mapper.append(namee)
+            columns = columns + mapper
+            df = county_data_row.loc[:, columns].copy()
+            return df
 
         def formula_column_generator(column, formula, color=''):
             length = f.fl_model.shape[0]
@@ -274,8 +292,31 @@ class FloridaWrangler:
                         log.append((index, col))
             return log
 
+        # making the market_vales_tab for the excel
+        market_values_df = market_values_gen(self, yearsback)
+        market_values_df.to_excel(writer, sheet_name='Valuation Data', index=False, startrow=2)
+        valuation_data_worksheet = writer.sheets['Valuation Data']
+        valuation_data_worksheet.write_formula('D5', '=+$K$4/D4')
+        valuation_data_worksheet.write_formula('E5', '=+$K$4/E4')
+        valuation_data_worksheet.write_formula('F5', '=+$K$4/F4')
+        valuation_data_worksheet.write_formula('G5', '=+$K$4/G4')
+        valuation_data_worksheet.write_formula('H5', '=+$K$4/H4')
+        valuation_data_worksheet.write_formula('I5', '=+$K$4/I4')
+        valuation_data_worksheet.write_formula('J5', '=+$K$4/J4')
+        valuation_data_worksheet.write_formula('K5', '=+$K$4/K4')
+
+        valuation_data_worksheet.write_formula('D2', '=YEAR(D3)')
+        valuation_data_worksheet.write_formula('E2', '=YEAR(E3)')
+        valuation_data_worksheet.write_formula('F2', '=YEAR(F3)')
+        valuation_data_worksheet.write_formula('G2', '=YEAR(G3)')
+        valuation_data_worksheet.write_formula('H2', '=YEAR(H3)')
+        valuation_data_worksheet.write_formula('I2', '=YEAR(I3)')
+        valuation_data_worksheet.write_formula('J2', '=YEAR(J3)')
+        valuation_data_worksheet.write_formula('K2', '=YEAR(K3)')
+
         # write the dataframe to the excel sheet
         self.fl_model.to_excel(writer, sheet_name='Data', index=False)
+        self.use_codes.to_excel(writer, sheet_name='Use Codes & County Type', index=False)
 
         # loop through each row of the Amount check column --
         worksheet = writer.sheets['Data']
@@ -342,7 +383,7 @@ class FloridaWrangler:
         formula_column_generator('CG', "=IF(CB{0}>0,MIN(IFERROR(MIN(CD{0}*CF{0},CA{0}),CA{0}),CB{0}),IFERROR(MIN(CD{0}*CF{0},CA{0}),CA{0}))", color="#d9d9d9")
 
         # use code tests
-        formula_column_generator('CI', "=VLOOKUP(R{0},'Use Codes & County Type'!B:E,4,FALSE)", color="#d9d9d9")
+        formula_column_generator('CI', "=VLOOKUP(R{0},'Use Codes & County Type'!A:D,4,FALSE)", color="#d9d9d9")
         formula_column_generator('CH', '=IFERROR(IF(AND(OR(CI{0}="S",CI{0}="R",CI{0}="C",CI{0}="V"),CF{0}>0),"Yes","No"),"No")', color="#d9d9d9")
         formula_column_generator('CJ', '=IF(AND(CH{0}="No",CI{0}="V"),"Yes","No")', color="#d9d9d9")
 
@@ -376,12 +417,13 @@ class FloridaWrangler:
 
 if __name__ == "__main__":
     path = os.path.abspath(os.path.dirname(__file__))
-    advfilelocation = path + r"\Examples\Alachua\Al test fl.xlsx"
-    tsrfilelocation = path + r"\Examples\Alachua\al tsr.xlsx"
-    lumfilelocation = path + r"\Examples\Alachua\Alachua Lumentum 2017.xlsx"
-    zillow_location = path + r"\Examples\Alachua\Alachua Zillow.xlsx"
+    advfilelocation = path + r"\Completed\Nassau\Nassau Ad List 2018.xls"
+    tsrfilelocation = path + r"\Completed\Nassau\Nassau TSR 2018.xlsx"
+    lumfilelocation = path + r"\Completed\Nassau\Nassau Lumentum 2018.xlsx"
+    zillow_location = path + r"\Completed\Nassau\nassau zillows.xlsx"
+    use_code_location = path + r"\Examples\Alachua\Use code and county types.xlsx"
 
-    f = FloridaWrangler(sys.argv[1], advfilelocation, tsrfilelocation, lumfilelocation, zillow_location)
+    f = FloridaWrangler(sys.argv[1], advfilelocation, tsrfilelocation, lumfilelocation, zillow_location, use_code_location)
 
 
 
