@@ -9,7 +9,8 @@ from Florida.Errors import MergingError
 import sys
 import os
 import numpy as np
-import pdb
+import re
+
 
 class FloridaWrangler:
     # class variable to define the columns of every model instance
@@ -17,15 +18,16 @@ class FloridaWrangler:
     columns = column_creator(yearsback=yearsback)
 
     # Set Up
-    def __init__(self, county, advfilelocation, tsrfilelocation, lumfilelocation, market_values_location, use_codes_location, supplemental=''):
+    def __init__(self, county, advfilelocation, tsrfilelocation, lumfilelocation, market_values_location,
+                 use_codes_location, supplemental=''):
 
-        '''
+        """
             DOCSTRING
             advfilelocation, tsrfilelocation, lumfilelocation should be locations that point to dataframes
             these files are standard during the florida model process
             see last years for questions about these dataframes and how this model is based
 
-        '''
+        """
 
         # will tell you what county we are dealing with and how the model just be constructed from here
         if type(county) != str:
@@ -78,13 +80,12 @@ class FloridaWrangler:
         return self._fl_model
 
     def platformchooser(self, dict_like):
-        '''
 
+        """
             DOCSTRING
             this function is used for the FloridaWrangler class
             it will take the instance's county name, and choose the platform from within the dict that is passed
-
-        '''
+        """
 
         # for (key, value) in dict, if the country name is in list of values, match platform
         # if not, raise an error
@@ -116,10 +117,10 @@ class FloridaWrangler:
             raise InputError("something seems to be wrong with the platform", "it needs to be one the big 4")
 
     def merging_calc(self):
-        '''
+        """
         this function was made as a test to see what columns we should use between adv and tsr/lumentum for the merging
         :return: a dict specifying what columns we are safe to merge on
-        '''
+        """
         # reading in the frames
         df = self._fl_model.loc[:, ['Account No.', 'Adv No.']].copy()
         tsr = self.tsr.loc[:, ["Parcel_ID", "List_Item_Ref"]].copy()
@@ -417,13 +418,35 @@ class FloridaWrangler:
 
 if __name__ == "__main__":
     path = os.path.abspath(os.path.dirname(__file__))
-    advfilelocation = path + r"\Completed\Nassau\Nassau Ad List 2018.xls"
-    tsrfilelocation = path + r"\Completed\Nassau\Nassau TSR 2018.xlsx"
-    lumfilelocation = path + r"\Completed\Nassau\Nassau Lumentum 2018.xlsx"
-    zillow_location = path + r"\Completed\Nassau\nassau zillows.xlsx"
-    use_code_location = path + r"\Examples\Alachua\Use code and county types.xlsx"
+    path_to_counties = os.path.join(path, "Completed", "{}".format(sys.argv[1]))
+    files = os.listdir(path_to_counties)
 
-    f = FloridaWrangler(sys.argv[1], advfilelocation, tsrfilelocation, lumfilelocation, zillow_location, use_code_location)
+    regex_matches = {
+        'adv_match': [r"[.\w ]*adv?[\s_]?list[\w ]*.xlsx?"],
+        'tsr_match': [r"[.\w ]*tsr[\s_]?(list)?[\w ]*.xlsx?"],
+        'lum_match': [r"[.\w ]*lumentum[\s_]?[\w ]*.xlsx?"],
+        'zillows_match': [r"[.\w ]*zillows?[\s_]?[\w ]*.xlsx?"]
+    }
+
+    for key, value in regex_matches.items():
+        for file in files:
+            search = re.search(value[0], file, re.I)
+            if search:
+                value.append(search.group())
+                break
+            else:
+                continue
+        if not len(value) > 1:
+            raise NameError("Error on file: {}, value: {}, key: {}".format(file, value, key))
+
+    advfilelocation = os.path.join(path_to_counties, regex_matches['adv_match'][1])
+    tsrfilelocation = os.path.join(path_to_counties, regex_matches['tsr_match'][1])
+    lumfilelocation = os.path.join(path_to_counties, regex_matches['lum_match'][1])
+    zillow_location = os.path.join(path_to_counties, regex_matches['zillows_match'][1])
+    use_code_location = os.path.join(path, "Examples", "Alachua", "Use code and county types.xlsx")
+
+    f = FloridaWrangler(sys.argv[1], advfilelocation, tsrfilelocation, lumfilelocation, zillow_location,
+                        use_code_location)
 
 
 

@@ -2,6 +2,7 @@ from datetime import datetime
 from .Errors import InputError
 import pandas as pd
 import math
+import numpy as np
 
 
 def homesteadmodifier(array, wfbs=False):
@@ -16,11 +17,18 @@ def homesteadmodifier(array, wfbs=False):
 
     # self data type check
     if type(array) != pd.Series:
-        raise TypeError('input to the function must be of type: list')
+        raise TypeError('input to the function must be of type: pd.Series')
+
     else:
+        hx_and_blanks = False
+        if len(list(array.value_counts().index)) == 1:
+            if list(array.value_counts().index)[0] == 'HX':
+                hx_and_blanks = True
+            else:
+                raise ValueError('Looks like there is a new special Homestead case for this county')
         newarray = []
         for row in array:
-            if row:
+            if not pd.isnull(row):
                 if row is True:
                     newarray.append('Yes')
                 elif type(row) == str:
@@ -34,13 +42,17 @@ def homesteadmodifier(array, wfbs=False):
                         newarray.append('Yes')
                     elif math.isnan(row):
                         newarray.append('Yes')
+                    elif row == 0:
+                        newarray.append('No')
                     else:
                         newarray.append('No')
-            elif row is False:
-                newarray.append('No')
-            elif row == 0:
-                newarray.append('No')
+                elif row is False:
+                    newarray.append('No')
+                else:
+                    newarray.append('Yes')
             elif wfbs:
+                newarray.append('No')
+            elif hx_and_blanks:
                 newarray.append('No')
             else:
                 newarray.append('Yes')
