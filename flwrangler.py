@@ -237,7 +237,17 @@ class FloridaWrangler:
 
     def wrangle(self):
         self.adv_gen(FloridaWrangler.yearsback)
-        self.merging_calc()
+        # self.merging_calc()
+        self._merge = {
+            "tsr": {
+                "left_on": ["Adv No.", "Account No."],
+                "right_on": ['List_Item_Ref', 'Parcel_ID']
+            },
+            "lum": {
+                "left_on": ["Adv No.", "Account No."],
+                "right_on": ["AdvNumber", "AuctionFormat"]
+            }
+        }
         self.tsr_gen()
         self.lumentum_gen(FloridaWrangler.yearsback)
         self.cleanup()
@@ -447,6 +457,17 @@ if __name__ == "__main__":
 
     f = FloridaWrangler(sys.argv[1], advfilelocation, tsrfilelocation, lumfilelocation, zillow_location,
                         use_code_location)
+    tsr_generator = tsr_generator
+    merge = {
+        "tsr": {
+            "left_on": ["Adv No.", "Account No."],
+            "right_on": ['List_Item_Ref', 'Parcel_ID']
+        },
+        "lum": {
+            "left_on": ["Adv No.", "Account No."],
+            "right_on": ["AdvNumber", "AuctionFormat"]
+        }
+    }
 
 
 

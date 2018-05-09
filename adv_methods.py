@@ -202,7 +202,7 @@ def dtadv(adv_list, fl_model, yearsback=0):
     # if the use codes go higher than 100 they come in the 01000 format
     # dividing by 100 will fix this potential issue
     if max(adv_list['UseCode']) >= 100:
-        fl_model['County_Land_Use'] = adv_list['UseCode']
+        fl_model['County_Land_Use'] = adv_list['UseCode'] / 100
     else:
         fl_model['County_Land_Use'] = adv_list['UseCode']
 

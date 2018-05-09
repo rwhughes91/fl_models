@@ -15,7 +15,7 @@ def tsr_generator(tsr_model, fl_model, merge_on_left, merge_on_right, platform="
     :return fl_model: pd.Dataframe -- original with updates
     '''
 
-    tsr_cols = ['List_Item_Ref', 'Amount', 'Location_House_Number', 'Location_City', 'Location_State', 'Location_Zip_4',
+    tsr_cols = ['Parcel_ID', 'List_Item_Ref', 'Amount', 'Location_House_Number', 'Location_City', 'Location_State', 'Location_Zip_4',
                 'Location_Full_Street_Address',
                 'Location_City_State_Zip', 'Longitude', 'Latitude', 'Current_Owner', 'Standardized_Land_Use',
                 'Standardized_Land_Use_Desc', 'Market_Value_Year',
@@ -33,7 +33,7 @@ def tsr_generator(tsr_model, fl_model, merge_on_left, merge_on_right, platform="
     elif type(fl_model) != pd.DataFrame:
         raise TypeError('fl_model must be a pd.DataFrame')
     # making sure the tsr_cols was not manipulated
-    elif type(tsr_cols) != list or len(tsr_cols) != 33:
+    elif type(tsr_cols) != list or len(tsr_cols) != 34:
         raise TypeError('columns must be a list with a length of 33')
     elif (type(merge_on_left) != str and type(merge_on_left) != list)\
             or (type(merge_on_right) != str and type(merge_on_right) != list):
@@ -57,6 +57,17 @@ def tsr_generator(tsr_model, fl_model, merge_on_left, merge_on_right, platform="
         else:
             raise TypeError('Merging Columns must be a list of strings or a string - tsr')
         proxy_model = tsr_gen.merge(tsr_sub, how="left", left_on=merge_on_left, right_on=merge_on_right)
+
+        # validate no row shifting
+        row_length = proxy_model.shape[0]
+        if not fl_model.shape[0] == row_length:
+            if row_length > fl_model.shape[0]:
+                duplicates = [str(index) for index, value in proxy_model['List_Item_Ref'].value_counts().iteritems() if
+                              value > 1]
+                message = ", ".join(duplicates)
+                raise ValueError("duplicate adv numbers in tsr: {}".format(message))
+            else:
+                raise ValueError("looks like the left merging didn't work, your fl_model is less than proxy")
 
         # conditionally changing null values in the data frame to simulate an excel vlookup
         slice = pd.isnull(proxy_model['List_Item_Ref'])

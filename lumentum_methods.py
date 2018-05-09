@@ -69,6 +69,17 @@ def lumentum_generator(lum_model, fl_model, merge_on_left, merge_on_right, platf
             raise TypeError('Merging columns must be a list of strings of a string - Lumentum')
         prox_model = lum_gen.merge(lum_sub, how="left", left_on=merge_on_left, right_on=merge_on_right)
 
+        # validate no row shifting
+        row_length = prox_model.shape[0]
+        if not fl_model.shape[0] == row_length:
+            if row_length > fl_model.shape[0]:
+                duplicates = [str(index) for index, value in prox_model['AdvNumber'].value_counts().iteritems() if
+                              value > 1]
+                message = ", ".join(duplicates)
+                raise ValueError("duplicate adv numbers in lumentum: {}".format(message))
+            else:
+                raise ValueError("looks like the left merging didn't work, your fl_model is less than proxy")
+
         # conditionally changing null values in the data frame to simulate an excel vlookup
         slice = pd.isnull(prox_model['AdvNumber'])
         if slice.sum() > 0:
@@ -92,7 +103,16 @@ def lumentum_generator(lum_model, fl_model, merge_on_left, merge_on_right, platf
         elif platform.lower() == "dt":
             # dynamically update columns (see above) -- this method is preferred so it works year over year
             for index, label in enumerate(county_owned_columns):
+                def format_county_liens(row):
+                    if type(row[label]) == str:
+                        if row[label].lower().startswith('c'):
+                            return "Yes"
+                        elif row[label].lower().startswith('i'):
+                            return "No"
+                    else:
+                        return row[label]
                 fl_model[label] = prox_model[certholdertype[index]]
+                fl_model[label] = fl_model.apply(format_county_liens, axis=1)
 
         elif platform.lower() == "wfbs":
             # dynamically update columns (see above) -- this method is preferred so it works year over year
