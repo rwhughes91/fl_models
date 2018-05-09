@@ -108,7 +108,7 @@ def tsr_generator(tsr_model, fl_model, merge_on_left, merge_on_right, platform="
         fl_model['Tax Deed History'] = proxy_model['TaxDeedHistory']
 
         if platform.lower() == "wfbs":
-            fl_model['HX'] = homesteadmodifier(proxy_model['List_Note_2'], wfbs=True)
+            fl_model['HX'] = homesteadmodifier(proxy_model['ID_11'], wfbs=True)
 
         return fl_model
 

@@ -228,7 +228,10 @@ def wfbsadv(adv_list, fl_model, yearsback=0):
     fl_model['Amount'] = adv_list['Face Amount']
     fl_model['Tax_Year'] = adv_list['Tax Year']
     fl_model['Assessment_Year'] = datetime.now().year - yearsback
-    fl_model['Total_Assessed_Value'] = adv_list['Assessed Value']
+    try:
+        fl_model['Total_Assessed_Value'] = adv_list['Assessed Value']
+    except KeyError:
+        fl_model['Total_Assessed_Value'] = adv_list['Market Value']
     fl_model['Prior Liens Outstanding'] = adv_list['Unpaid Certificates']  # need to lookup still
 
     return fl_model

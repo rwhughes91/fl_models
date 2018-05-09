@@ -117,7 +117,16 @@ def lumentum_generator(lum_model, fl_model, merge_on_left, merge_on_right, platf
         elif platform.lower() == "wfbs":
             # dynamically update columns (see above) -- this method is preferred so it works year over year
             for index, label in enumerate(county_owned_columns):
+                def format_county_liens(row):
+                    if type(row[label]) == str:
+                        if row[label].lower().startswith('c'):
+                            return "Yes"
+                        elif row[label].lower().startswith('i'):
+                            return "No"
+                    else:
+                        return row[label]
                 fl_model[label] = prox_model[certholdertype[index]]
+                fl_model[label] = fl_model.apply(format_county_liens, axis=1)
 
             fl_model['County_Land_Use'] = prox_model['ZoningUseCode']
             fl_model['County_Land_Use_Desc'] = prox_model['LandDescription']
