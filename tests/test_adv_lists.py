@@ -11,12 +11,15 @@ test_array = ["YES", "NO", "yes", "no", "HX",
               None, nan
               ]
 
+test_array_hx = ["Hx", "hx", "HX", "hX", nan, nan, nan, nan, "Hx"]
+
 
 class TestConstruction_Homestead(unittest.TestCase):
 
     def setUp(self):
         self.array = pd.Series(test_array)
         self.test_func = homesteadmodifier
+        self.array_hx = test_array_hx
 
     def test_empty(self):
         self.assertTrue(self.test_func(pd.Series([])) is not None)
@@ -58,6 +61,11 @@ class TestConstruction_Homestead(unittest.TestCase):
     def test_single_values_blanks(self):
         self.assertEqual(self.test_func(pd.Series(self.array[16:20]))[2], "Yes")
         self.assertEqual(self.test_func(pd.Series(self.array[16:20]))[3], "Yes")
+
+    def test_hx_and_blanks(self):
+        self.assertEqual(self.test_func(pd.Series(self.array_hx)), ["Yes", "Yes", "Yes", "Yes",
+                                                                    "No", "No", "No", "No",
+                                                                    "Yes"])
 
     '''testing as an array'''
 

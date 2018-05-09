@@ -21,8 +21,15 @@ def homesteadmodifier(array, wfbs=False):
 
     else:
         hx_and_blanks = False
+        t_array = []
+        for x in array:
+            if type(x) == str:
+                t_array.append(x.lower())
+            else:
+                t_array.append(x)
+        array = pd.Series(t_array)
         if len(list(array.value_counts().index)) == 1:
-            if list(array.value_counts().index)[0] == 'HX':
+            if list(array.value_counts().index)[0] == 'hx':
                 hx_and_blanks = True
             else:
                 raise ValueError('Looks like there is a new special Homestead case for this county')
