@@ -4,6 +4,10 @@ from numpy import nan
 import pandas as pd
 import math
 
+
+standard_answer = ["Yes"]*4 + ["No"]*6
+standard_answer_2 = ["Yes"]*4 + ["No"]*6 + ["Yes"]*2
+
 test_array = ["YES", "NO", "yes", "no", "HX",
               "hx", "TRUE", "True", "true",
               True, False, "False", "FALSE",
@@ -12,6 +16,13 @@ test_array = ["YES", "NO", "yes", "no", "HX",
               ]
 
 test_array_hx = ["Hx", "hx", "HX", "hX", nan, nan, nan, nan, "Hx"]
+test_array_hx_2 = ['Hx']*4 + [nan]*6
+test_array_bools = [True]*4 + [False]*6
+test_array_y_and_n = ['y']*4 + ['n']*6
+test_array_yes_and_no = ['Yes']*4 + ['No']*6
+test_array_nums = [456]*4 + [0]*6
+test_array_nums_2 = [4]*2 + [3]*2 + [nan]*2
+
 
 
 class TestConstruction_Homestead(unittest.TestCase):
@@ -20,6 +31,19 @@ class TestConstruction_Homestead(unittest.TestCase):
         self.array = pd.Series(test_array)
         self.test_func = homesteadmodifier
         self.array_hx = test_array_hx
+        self.array_hx_2 = pd.Series(test_array_hx_2)
+        self.array_bools = pd.Series(test_array_bools)
+        self.array_y_and_n = pd.Series(test_array_y_and_n)
+        self.array_yes_and_no = pd.Series(test_array_yes_and_no)
+        self.array_nums = pd.Series(test_array_nums)
+
+        self.array_hx_adv = pd.Series(test_array_hx + [nan]*2)
+        self.array_hx_2_adv = pd.Series(test_array_hx_2 + [nan] * 2)
+
+        self.array_bools_adv = pd.Series(test_array_bools + [nan] * 2)
+        self.array_y_and_n_adv = pd.Series(test_array_y_and_n + [nan] * 2)
+        self.array_yes_and_no_adv = pd.Series(test_array_yes_and_no + [nan] * 2)
+        self.array_nums_adv = pd.Series(test_array_nums + [nan]*2)
 
     def test_empty(self):
         self.assertTrue(self.test_func(pd.Series([])) is not None)
@@ -66,6 +90,23 @@ class TestConstruction_Homestead(unittest.TestCase):
         self.assertEqual(self.test_func(pd.Series(self.array_hx)), ["Yes", "Yes", "Yes", "Yes",
                                                                     "No", "No", "No", "No",
                                                                     "Yes"])
+        self.assertEqual(self.test_func(self.array_hx_2), standard_answer)
+
+
+    def test_array_bools(self):
+        self.assertEqual(self.test_func(self.array_bools), standard_answer)
+        self.assertEqual(self.test_func(self.array_bools_adv), standard_answer_2)
+
+    def test_array_yes_and_no(self):
+        self.assertEqual(self.test_func(self.array_y_and_n), standard_answer)
+        self.assertEqual(self.test_func(self.array_yes_and_no), standard_answer)
+
+        self.assertEqual(self.test_func(self.array_y_and_n_adv), standard_answer_2)
+        self.assertEqual(self.test_func(self.array_yes_and_no_adv), standard_answer_2)
+
+    def test_nums(self):
+        self.assertEqual(self.test_func(self.array_nums), standard_answer)
+        self.assertEqual(self.test_func(self.array_nums_adv), standard_answer_2)
 
     '''testing as an array'''
 
