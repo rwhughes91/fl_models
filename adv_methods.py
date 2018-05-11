@@ -94,12 +94,9 @@ def grantstreetadv(county, adv_list, fl_model, yearsback=0):
     county_owned_columns.reverse()
 
     # certain counties pull differently
-    if county == "Charlotte" or county == "Indian River" or county == "Pinellas":
+    if county == "Charlotte" or county == "Indian River" or county == "Pinellas" or county == "Monroe":
         # need to use Parcel No. instead of Account No.
         fl_model['Account No.'] = adv_list['Parcel No.']
-    elif county == "Pasco":
-        # need to use Fude instead of Account No.
-        fl_model['Account No.'] = adv_list['Fuse']
     else:
         # can use Account No.
         fl_model['Account No.'] = adv_list['Account No.']
@@ -209,7 +206,7 @@ def dtadv(adv_list, fl_model, yearsback=0):
     # if the use codes go higher than 100 they come in the 01000 format
     # dividing by 100 will fix this potential issue
     if max(adv_list['UseCode']) >= 100:
-        fl_model['County_Land_Use'] = adv_list['UseCode'] / 100
+        fl_model['County_Land_Use'] = adv_list['UseCode'].apply(lambda row: math.floor(row / 100))
     else:
         fl_model['County_Land_Use'] = adv_list['UseCode']
 

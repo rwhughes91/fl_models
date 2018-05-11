@@ -5,6 +5,7 @@ from Florida.Errors import InputError
 from Florida.adv_methods import homesteadmodifier, grantstreetadv, realauctionadv, dtadv, wfbsadv
 from Florida.lumentum_methods import lumentum_generator
 from Florida.tsr_methods import tsr_generator
+from Florida.supplemental_methods import supplemental_df_gen
 from Florida.Errors import MergingError
 import sys
 import os
@@ -39,7 +40,10 @@ class FloridaWrangler:
 
         self.adv_list = pd.read_excel(advfilelocation)
         # some data is only available in supplemental files, but not all of them
-        self.supplemental = supplemental
+        if self._platform.lower() == 'realauction':
+            self.supplemental = pd.read_excel(supplemental)
+        else:
+            self.supplemental = supplemental
         self.tsr = pd.read_excel(tsrfilelocation)
         self.lumentum = pd.read_excel(lumfilelocation)
         self.zillow_values = pd.read_excel(market_values_location, sheet_name='All Homes', skiprows=[0])
@@ -238,6 +242,7 @@ class FloridaWrangler:
     def wrangle(self):
         self.adv_gen(FloridaWrangler.yearsback)
         # self.merging_calc()
+        """
         self._merge = {
             "tsr": {
                 "left_on": ["Adv No.", "Account No."],
@@ -248,9 +253,23 @@ class FloridaWrangler:
                 "right_on": ["AdvNumber", "AuctionFormat"]
             }
         }
+        """
+        self._merge = {
+            "tsr": {
+                "left_on": "Adv No.",
+                "right_on": 'List_Item_Ref'
+            },
+            "lum": {
+                "left_on": "Adv No.",
+                "right_on": "AdvNumber"
+            }
+        }
+
         self.tsr_gen()
         self.lumentum_gen(FloridaWrangler.yearsback)
         self.cleanup()
+        if self.platform.lower() == 'realauction':
+            self.supplemental = supplemental_df_gen(self.supplemental, self._fl_model)
 
     def write(self, yearsback=0):
         name = "{} Florida Model.xlsx".format(self.county)
@@ -328,6 +347,8 @@ class FloridaWrangler:
         # write the dataframe to the excel sheet
         self.fl_model.to_excel(writer, sheet_name='Data', index=False)
         self.use_codes.to_excel(writer, sheet_name='Use Codes & County Type', index=False)
+        if self.platform.lower() == 'realauction':
+            self.supplemental.to_excel(writer, sheet_name="Supplemental Data", index=False)
 
         # loop through each row of the Amount check column --
         worksheet = writer.sheets['Data']
@@ -453,10 +474,16 @@ if __name__ == "__main__":
     tsrfilelocation = os.path.join(path_to_counties, regex_matches['tsr_match'][1])
     lumfilelocation = os.path.join(path_to_counties, regex_matches['lum_match'][1])
     zillow_location = os.path.join(path_to_counties, regex_matches['zillows_match'][1])
+    supplemental_location = os.path.join(path_to_counties, "{} SUPPLEMENTAL 2018.XLSX".format(sys.argv[1]))
     use_code_location = os.path.join(path, "Examples", "Alachua", "Use code and county types.xlsx")
 
+    print(advfilelocation)
+    print(tsrfilelocation)
+    print(lumfilelocation)
+    print(zillow_location)
+
     f = FloridaWrangler(sys.argv[1], advfilelocation, tsrfilelocation, lumfilelocation, zillow_location,
-                        use_code_location)
+                        use_code_location, supplemental_location)
     tsr_generator = tsr_generator
     merge = {
         "tsr": {

@@ -24,7 +24,7 @@ def tsr_generator(tsr_model, fl_model, merge_on_left, merge_on_right, platform="
                 'CERT_HOLDER_TYPE6', 'CERT_HOLDER_TYPE7', 'Latest_Arms_Length_Sale_Date',
                 'Latest_Arms_Length_Sale_Price', 'Loan1_Amount', 'Loan1_Type',
                 'environmentalsubjectsitefoundcount', 'environmentalsitefoundcount', 'environmentalscore', 'FLD_CLASS',
-                'TaxDeedHistory', 'List_Note_2'
+                'TaxDeedHistory', 'List_Note_2', 'ID_11'
                 ]
 
     # validating attribute types in the function
@@ -33,7 +33,7 @@ def tsr_generator(tsr_model, fl_model, merge_on_left, merge_on_right, platform="
     elif type(fl_model) != pd.DataFrame:
         raise TypeError('fl_model must be a pd.DataFrame')
     # making sure the tsr_cols was not manipulated
-    elif type(tsr_cols) != list or len(tsr_cols) != 34:
+    elif type(tsr_cols) != list or len(tsr_cols) != 35:
         raise TypeError('columns must be a list with a length of 33')
     elif (type(merge_on_left) != str and type(merge_on_left) != list)\
             or (type(merge_on_right) != str and type(merge_on_right) != list):
